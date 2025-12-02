@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { 
@@ -713,8 +714,8 @@ const DashboardShell = ({ consultant, children, onLogout }: DashboardShellProps)
         return child;
     });
 
-    // Check if user is distributor, but FORCE consultor if ID is 007053 (Cleide) for demo/testing purposes
-    const isDistributor = (consultant.role === 'leader' || consultant.role === 'admin') && consultant.id !== '007053';
+    // Determine permissions
+    const isDistributor = consultant.role === 'leader' || consultant.role === 'admin';
 
     // Main Menu Items
     const menuItems = [
@@ -901,8 +902,8 @@ const DashboardShell = ({ consultant, children, onLogout }: DashboardShellProps)
 
 const Dashboard = ({ activeTab, setActiveTab, consultant }: { activeTab?: string, setActiveTab?: (tab: string) => void, consultant: Consultant }) => {
     // Determine content based on activeTab
-    // Force consultor for Cleide (007053) for demo purposes
-    const isDistributor = (consultant.role === 'leader' || consultant.role === 'admin') && consultant.id !== '007053';
+    // Determine permissions
+    const isDistributor = consultant.role === 'leader' || consultant.role === 'admin';
 
     // State for Materials Filter
     const [materialCategory, setMaterialCategory] = useState('Todos');
@@ -990,7 +991,7 @@ const Dashboard = ({ activeTab, setActiveTab, consultant }: { activeTab?: string
             return;
         }
 
-        const phoneNumber = "5511999999999"; // Substitua pelo número real de atendimento da Brotos
+        const phoneNumber = "5571999190515"; // Número atualizado da Brotos
         
         const message = `*NOVO PEDIDO - CLUBE BROTOS* 🌱\n\n` +
             `👤 *Consultor:* ${consultant.name} (ID: ${consultant.id})\n\n` +
