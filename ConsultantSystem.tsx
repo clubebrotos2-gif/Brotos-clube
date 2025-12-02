@@ -94,7 +94,7 @@ const OrderDetailsModal = ({ order, onClose }: { order: any, onClose: () => void
     const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
     const unitPrice = 210.00;
     const subtotal = qty * unitPrice;
-    const shipping = order.total.includes('420,00') || order.total.includes('1.050,00') || order.total.includes('675,90') ? 0 : 45.90; 
+    const shipping = 0; // Always free
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
@@ -162,7 +162,7 @@ const OrderDetailsModal = ({ order, onClose }: { order: any, onClose: () => void
                                 </div>
                                 <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
                                     <TruckIcon className="h-4 w-4 text-brand-green-mid" />
-                                    <p className="text-xs font-medium text-brand-green-dark">Sedex Express</p>
+                                    <p className="text-xs font-medium text-brand-green-dark">Sedex Express - Grátis</p>
                                 </div>
                             </div>
                         </div>
@@ -176,7 +176,7 @@ const OrderDetailsModal = ({ order, onClose }: { order: any, onClose: () => void
                             </div>
                             <div className="flex justify-between text-sm text-gray-500">
                                 <span>Frete</span>
-                                <span>{shipping === 0 ? 'Grátis' : formatCurrency(shipping)}</span>
+                                <span className="text-green-600 font-bold">Grátis</span>
                             </div>
                             <div className="h-px bg-gray-200 my-2"></div>
                             <div className="flex justify-between items-center text-xl font-bold text-brand-green-dark">
@@ -421,6 +421,26 @@ const LoginScreen = ({ onLogin, onRegisterClick }: { onLogin: (user: Consultant)
         e.preventDefault();
         setLoading(true);
         setError('');
+
+        // BYPASS DE ADMINISTRADOR (Hardcoded para garantir acesso imediato e persistente)
+        if (id === '000000' && password === 'jo1234') {
+            const adminUser: Consultant = {
+                id: '000000',
+                auth_id: 'admin-bypass-uuid',
+                name: 'Administrador Principal',
+                email: 'admin@brotos.com',
+                whatsapp: '5571999190515',
+                role: 'admin',
+                created_at: new Date().toISOString()
+            };
+            
+            // Salvar no localStorage para manter logado ao recarregar
+            localStorage.setItem('broto_admin_user', JSON.stringify(adminUser));
+            
+            onLogin(adminUser);
+            setLoading(false);
+            return;
+        }
 
         try {
             const { data: consultant, error: consultantError } = await supabase
@@ -991,7 +1011,7 @@ const Dashboard = ({ activeTab, setActiveTab, consultant }: { activeTab?: string
             return;
         }
 
-        const phoneNumber = "5571999190515"; // Número atualizado da Brotos
+        const phoneNumber = "5571999190515"; 
         
         const message = `*NOVO PEDIDO - CLUBE BROTOS* 🌱\n\n` +
             `👤 *Consultor:* ${consultant.name} (ID: ${consultant.id})\n\n` +
@@ -1745,6 +1765,19 @@ export const ConsultantApp = () => {
     // Persist login state check
     useEffect(() => {
         const checkUser = async () => {
+            // 1. Check Local Storage for Admin Bypass (Persistence)
+            const storedAdmin = localStorage.getItem('broto_admin_user');
+            if (storedAdmin) {
+                try {
+                    setUser(JSON.parse(storedAdmin));
+                    return;
+                } catch (e) {
+                    console.error("Error parsing stored admin user", e);
+                    localStorage.removeItem('broto_admin_user');
+                }
+            }
+
+            // 2. Check Supabase Session
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                  const { data: consultant } = await supabase
@@ -1765,6 +1798,7 @@ export const ConsultantApp = () => {
     }, []);
 
     const handleLogout = async () => {
+        localStorage.removeItem('broto_admin_user'); // Clear local persistence
         await supabase.auth.signOut();
         setUser(null);
     };
